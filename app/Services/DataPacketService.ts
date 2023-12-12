@@ -1,7 +1,7 @@
 import {Buffer} from "memfs/lib/internal/buffer";
 
 
-type Instruction = {
+export type Instruction = {
   position: number,
   length: number,
   name: keyof DataPacket,
@@ -10,7 +10,7 @@ type Instruction = {
   upload: boolean
 };
 
-type DataPacket = {
+export type DataPacket = {
   IsRaceOn: boolean,
   SessionTimeMS: number,
   EngineMaxRpm: number,

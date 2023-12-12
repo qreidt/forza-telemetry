@@ -1,6 +1,7 @@
 import Logger from "@ioc:Adonis/Core/Logger";
 import DataPacketService from "App/Services/DataPacketService";
 import {Buffer} from "memfs/lib/internal/buffer";
+import SessionManager from "App/Singletons/SessionManager";
 const dgram = require('node:dgram');
 
 type RemoteAddressInformation = {
@@ -52,7 +53,8 @@ class UdpListener {
     }
 
     this.lastPacketAtTime = current_time;
-    DataPacketService.parseDataPacket(message);
+    const data = DataPacketService.parseDataPacket(message);
+    SessionManager.queueData(data);
     this.count = 0;
   }
 }
