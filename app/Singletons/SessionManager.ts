@@ -12,8 +12,6 @@ class SessionManager {
 
   private queue: DataPacket[] = [];
 
-  public last_packet: DataPacket;
-
   constructor() {
 
     this.queueWorker = new Promise(async () => {
@@ -68,12 +66,12 @@ class SessionManager {
   }
 
   public lastSession: Session;
-  // private sessionPackets: SessionPacket[] = [];
+  private sessionData: SessionPacket[] = [];
   public laps: Lap[] = [];
 
   // Session Time
-  private currentSessionTime = 0;
-  private localSessionStartTime: number|null = null;
+  public currentSessionTime = 0;
+  public localSessionStartTime: number|null = null;
 
   // Ordinals
   public currentTrackOrdinal: number|null = 0;
@@ -101,15 +99,21 @@ class SessionManager {
   public currentWearRL: number = 0;
   public currentWearRR: number = 0;
 
+  // debug
+  public last_packet: DataPacket;
+
   /** Atualizar dados da sessão com cada novo pacote */
   private updateSession(data: DataPacket): void {
+    this.currentSessionTime = data.SessionTimeMS;
 
-    if (data.DistanceTraveled <= 0) {
+    // Ignore if lap didn't start yet
+    if (this.lapStartingDistance === 0 && data.DistanceTraveled <= 0) {
       return;
     }
 
-    this.checkSessionChanged(data);
-    this.currentSessionTime = data.SessionTimeMS;
+    if (this.checkSessionChanged(data)) {
+      return;
+    }
 
     this.setLocalSessionStartTime(data);
 
@@ -118,30 +122,27 @@ class SessionManager {
 
     this.last_packet = data;
 
-    // this.sessionPackets.push({
-    //   ...data,
-    //   LapStartingDistance: this.lapStartingDistance,
-    //   CurrentLapDistance: this.lapCurrentDistance
-    // });
+    this.sessionData.push({
+      ...data,
+      LapStartingDistance: this.lapStartingDistance,
+      CurrentLapDistance: this.lapCurrentDistance
+    });
   }
 
   /** Verificar se foi iniciada uma nova sessão */
-  private checkSessionChanged(data: DataPacket): void {
+  private checkSessionChanged(data: DataPacket): boolean {
     if (
       data.SessionTimeMS < this.currentSessionTime
       || data.CarOrdinal !== this.currentCarOrdinal
       || data.TrackOrdinal !== this.currentTrackOrdinal
       || data.LapNumber < this.currentLap
+      || data.DistanceTraveled < this.lapStartingDistance
     ) {
-      return this.resetSession(data);
+      this.resetSession(data);
+      return true;
     }
-  }
 
-  /** Atualizar timestamp de início da sessão */
-  private setLocalSessionStartTime(data: DataPacket): void {
-    if (! this.localSessionStartTime) {
-      this.localSessionStartTime = data.SessionTimeMS;
-    }
+    return false;
   }
 
   /** Resetar dados para uma nova sessão e compilar dados da sessão antiga */
@@ -154,7 +155,7 @@ class SessionManager {
     this.lastLapTime = 0;
     this.lapStartingDistance = 0;
     this.lapCurrentDistance = 0;
-    this.lapStartingFuel = 0;
+    this.lapStartingFuel = data.Fuel;
     this.lapStartingWearFL = 0;
     this.lapStartingWearFR = 0;
     this.lapStartingWearRL = 0;
@@ -163,7 +164,14 @@ class SessionManager {
     this.currentWearFR = 0;
     this.currentWearRL = 0;
     this.currentWearRR = 0;
-    //
+    this.laps = [];
+  }
+
+  /** Atualizar timestamp de início da sessão */
+  private setLocalSessionStartTime(data: DataPacket): void {
+    if (! this.localSessionStartTime) {
+      this.localSessionStartTime = data.SessionTimeMS;
+    }
   }
 
   /** Atualizar dados relacionas a volta */
@@ -207,15 +215,40 @@ class SessionManager {
   }
 
   /** Atualizar estado de degradação dos pneus */
-  private updateWear(data: DataPacket): void
-  {
+  private updateWear(data: DataPacket): void {
     this.currentWearFL = data.TireWearFrontLeft;
     this.currentWearFR = data.TireWearFrontRight;
     this.currentWearRL = data.TireWearRearLeft;
     this.currentWearRR = data.TireWearRearRight;
   }
-}
 
+  /** Facilitador para publicação de dados */
+  public export(): any|object {
+    return {
+      lastSession: this.lastSession,
+      currentSessionTime: this.currentSessionTime,
+      localSessionStartTime: this.localSessionStartTime,
+      currentTrackOrdinal: this.currentTrackOrdinal,
+      currentCarOrdinal: this.currentCarOrdinal,
+      currentLap: this.currentLap,
+      currentLapTime: this.currentLapTime,
+      lastLapTime: this.lastLapTime,
+      lapStartingDistance: this.lapStartingDistance,
+      lapCurrentDistance: this.lapCurrentDistance,
+      lapStartingFuel: this.lapStartingFuel,
+      lapStartingWearFL: this.lapStartingWearFL,
+      lapStartingWearFR: this.lapStartingWearFR,
+      lapStartingWearRL: this.lapStartingWearRL,
+      lapStartingWearRR: this.lapStartingWearRR,
+      currentWearFL: this.currentWearFL,
+      currentWearFR: this.currentWearFR,
+      currentWearRL: this.currentWearRL,
+      currentWearRR: this.currentWearRR,
+      laps: this.laps,
+      last_packet: this.last_packet,
+    };
+  }
+}
 
 type Session = {
   lap_count: number,

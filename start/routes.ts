@@ -28,7 +28,7 @@ Route.get('/', async () => {
 
 Route.get('/active-session', () => {
   //console.log(SessionManager);
-  return Object.assign({}, SessionManager);
+  return SessionManager.export();
 });
 
 Route.get('/sessions', async () => {
