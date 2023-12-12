@@ -1,28 +1,23 @@
 import {DataPacket} from "App/Services/DataPacketService";
 import Logger from "@ioc:Adonis/Core/Logger";
+import Websocket from "App/Sockets/Websocket";
 
 
 class SessionManager {
 
-  //private timeoutId: number;
   // @ts-ignore
-  private worker: Promise<void>;
+  private queueWorker: Promise<void>;
+  // @ts-ignore
+  private poolingInterval: unknown;
+
   private queue: DataPacket[] = [];
 
   public last_packet: DataPacket;
 
   constructor() {
-    // @ts-ignore
-    // this.timeoutId = setInterval(() => {
-    //   const next = this.queue.pop();
-    //   if (! next) {
-    //     return;
-    //   }
-    //
-    //   this.updateSession(next);
-    // }, 100);
 
-    this.worker = new Promise(async () => {
+    this.queueWorker = new Promise(async () => {
+      // noinspection InfiniteLoopJS
       while (true) {
         const next = this.queue.shift();
         if (! next) {
@@ -34,7 +29,30 @@ class SessionManager {
       }
     });
 
-    Logger.info('Session Ingest Worket Setup.');
+    this.poolingInterval = setInterval(() => {
+      Websocket.io.emit('active-session', {
+        currentTrackOrdinal: this.currentTrackOrdinal,
+        currentCarOrdinal: this.currentCarOrdinal,
+        currentLap: this.currentLap + 1,
+        currentLapTime: this.currentLapTime,
+        lastLapTime: this.lastLapTime,
+        lapStartingDistance: this.lapStartingDistance,
+        lapCurrentDistance: this.lapCurrentDistance,
+        lapStartingFuel: this.lapStartingFuel,
+        lapStartingWearFL: this.lapStartingWearFL,
+        lapStartingWearFR: this.lapStartingWearFR,
+        lapStartingWearRL: this.lapStartingWearRL,
+        lapStartingWearRR: this.lapStartingWearRR,
+        currentWearFL: this.currentWearFL,
+        currentWearFR: this.currentWearFR,
+        currentWearRL: this.currentWearRL,
+        currentWearRR: this.currentWearRR,
+        laps: this.laps
+      });
+    }, 1000);
+
+    Logger.info('Session Ingest Worker Setup.');
+    Logger.info('Session Pooling Worker Setup.');
   }
 
   public queueData(data: DataPacket): void {
@@ -50,7 +68,7 @@ class SessionManager {
   }
 
   public lastSession: Session;
-  //private sessionPackets: SessionPacket[] = [];
+  // private sessionPackets: SessionPacket[] = [];
   public laps: Lap[] = [];
 
   // Session Time
@@ -85,7 +103,6 @@ class SessionManager {
 
   /** Atualizar dados da sessão com cada novo pacote */
   private updateSession(data: DataPacket): void {
-    //console.log('called updateSession()');
 
     if (data.DistanceTraveled <= 0) {
       return;
@@ -110,7 +127,6 @@ class SessionManager {
 
   /** Verificar se foi iniciada uma nova sessão */
   private checkSessionChanged(data: DataPacket): void {
-    //console.log('called checkSessionChanged()');
     if (
       data.SessionTimeMS < this.currentSessionTime
       || data.CarOrdinal !== this.currentCarOrdinal
@@ -123,7 +139,6 @@ class SessionManager {
 
   /** Atualizar timestamp de início da sessão */
   private setLocalSessionStartTime(data: DataPacket): void {
-    //console.log('called setLocalSessionStartTime()');
     if (! this.localSessionStartTime) {
       this.localSessionStartTime = data.SessionTimeMS;
     }
@@ -131,7 +146,6 @@ class SessionManager {
 
   /** Resetar dados para uma nova sessão e compilar dados da sessão antiga */
   private resetSession(data: DataPacket): void {
-    //console.log('called resetSession()');
     this.localSessionStartTime = null;
     this.currentLap = 0;
     this.currentTrackOrdinal = data.TrackOrdinal;
@@ -154,7 +168,6 @@ class SessionManager {
 
   /** Atualizar dados relacionas a volta */
   private updateLap(data: DataPacket): void {
-    //console.log('called updateLap()');
     this.currentLapTime = data.CurrentLap;
 
     if (data.LapNumber > this.currentLap) {
@@ -170,12 +183,6 @@ class SessionManager {
 
   /** Compilar dados da ultima volta e preparar dados para nova volta iniciada */
   private wrapupLap(data: DataPacket): void {
-    //console.log('called wrapupLap()');
-    console.log({
-      SessionTimeMS: data.SessionTimeMS,
-      LapNumber: data.LapNumber,
-      CurrentLap: data.CurrentLap,
-    });
 
     this.laps.push({
       Number: this.currentLap + 1,
@@ -222,6 +229,7 @@ type Session = {
   laps: Lap[]
 };
 
+// @ts-ignore
 type SessionPacket = DataPacket & {
   LapStartingDistance: number,
   CurrentLapDistance: number

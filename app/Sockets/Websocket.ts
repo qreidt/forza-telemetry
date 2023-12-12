@@ -22,7 +22,8 @@ class Websocket {
   private start(): void {
     this.io = new Server(AdonisServer.instance, {
       cors: { origin: '*' },
-      transports: ['websocket']
+      //path: '/ws',
+      transports: ['websocket', 'polling']
     });
   }
 }

@@ -1,10 +1,14 @@
-import UdpListener from "App/Sockets/UdpListener";
 import Websocket from "App/Sockets/Websocket";
-//import {Socket} from "socket.io";
+import UdpListener from "App/Sockets/UdpListener";
+import {Socket} from "socket.io";
 
-UdpListener.boot();
 Websocket.boot();
+UdpListener.boot();
 
-Websocket.io.on('connection', (/*socket: Socket*/) => {
+Websocket.io.on('connect_error', function (err) {
+  console.log(err);
+});
+
+Websocket.io.on('connection', (_socket: Socket) => {
   //
 });
