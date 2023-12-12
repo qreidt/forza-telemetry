@@ -1,6 +1,7 @@
 import {DataPacket} from "App/Services/DataPacketService";
 import Logger from "@ioc:Adonis/Core/Logger";
 import Websocket from "App/Sockets/Websocket";
+import MathHelper from "App/Helpers/MathHelper";
 
 
 class SessionManager {
@@ -65,7 +66,7 @@ class SessionManager {
     this.queue.push(data);
   }
 
-  public lastSession: Session;
+  public lastSession: TelemetrySession;
   private sessionData: SessionPacket[] = [];
   public laps: Lap[] = [];
 
@@ -74,8 +75,8 @@ class SessionManager {
   public localSessionStartTime: number|null = null;
 
   // Ordinals
-  public currentTrackOrdinal: number|null = 0;
-  public currentCarOrdinal: number|null = 0;
+  public currentTrackOrdinal: number = 0;
+  public currentCarOrdinal: number = 0;
 
   // Lap Number and Times
   public currentLap: number = 0;
@@ -138,6 +139,7 @@ class SessionManager {
       || data.LapNumber < this.currentLap
       || data.DistanceTraveled < this.lapStartingDistance
     ) {
+      this.wrapupSession();
       this.resetSession(data);
       return true;
     }
@@ -165,6 +167,42 @@ class SessionManager {
     this.currentWearRL = 0;
     this.currentWearRR = 0;
     this.laps = [];
+  }
+
+  /** Compilar dados da sessão */
+  private wrapupSession(): void {
+    if (this.laps.length === 0) {
+      return;
+    }
+
+    // Lap Time
+    const lap_times = this.laps.map<number>((lap) => lap.Time);
+    const avg_lap_time = MathHelper.getAverage(lap_times);
+    const median_lap_time = MathHelper.getMedian(lap_times);
+    const best_lap_time = MathHelper.getMin(lap_times);
+
+    const fuel_usage_per_lap = MathHelper.getAverage(
+      this.laps.map((lap) => lap.DeltaFuel * -1)
+    );
+
+    const tire_degradation_per_lap = MathHelper.getAverage(
+      this.laps.map((lap) => MathHelper.getAverage([
+        lap.DeltaWearFL, lap.DeltaWearFR,
+        lap.DeltaWearRL, lap.DeltaWearRR
+      ]) * -1)
+    );
+
+    this.lastSession = {
+      lap_count: this.laps.length,
+      car_ordinal: this.currentCarOrdinal,
+      track_ordinal: this.currentTrackOrdinal,
+      avg_lap_time,
+      median_lap_time,
+      best_lap_time,
+      fuel_usage_per_lap,
+      tire_degradation_per_lap,
+      laps: this.laps
+    };
   }
 
   /** Atualizar timestamp de início da sessão */
@@ -250,14 +288,17 @@ class SessionManager {
   }
 }
 
-type Session = {
+type TelemetrySession = {
   lap_count: number,
   car_ordinal: number,
   track_ordinal: number,
 
-  avg_lap_time: number,
-  mean_lap_time: number,
-  best_lap_time: number,
+  avg_lap_time: number|null,
+  median_lap_time: number|null,
+  best_lap_time: number|null,
+
+  fuel_usage_per_lap: number|null,
+  tire_degradation_per_lap: number|null,
 
   laps: Lap[]
 };
