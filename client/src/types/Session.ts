@@ -7,14 +7,18 @@ export type ActiveSession = {
     lastSession: number,
     currentSessionTime: number,
     localSessionStartTime: number,
-    currentTrackOrdinal: number,
-    currentCarOrdinal: number,
+    currentTrackOrdinal: string,
+    currentCarOrdinal: string,
     currentLap: number,
     currentLapTime: number,
     lastLapTime: number,
+    bestLapTime: number,
+    avgLapTime: number,
     lapStartingDistance: number,
     lapCurrentDistance: number,
     lapStartingFuel: number,
+    currentFuel: number,
+    avgFuelUsage: number,
     lapStartingWearFL: number,
     lapStartingWearFR: number,
     lapStartingWearRL: number,
@@ -23,6 +27,10 @@ export type ActiveSession = {
     currentWearFR: number,
     currentWearRL: number,
     currentWearRR: number,
+    avgTireWear: number,
+    lapMaxSpeed: number,
+    lapMinSpeed: number,
+    lapStartingPosition: number,
     laps: Lap[],
 };
 
@@ -53,9 +61,16 @@ export type Lap = {
     // Fuel
     DeltaFuel: number,
 
+    MaxSpeed: number,
+    MinSpeed: number,
+
     // Wear
     DeltaWearFL: number,
     DeltaWearFR: number,
     DeltaWearRL: number,
     DeltaWearRR: number,
+    AvgWear: number,
+
+    // Position
+    PositionChanges: number
 };

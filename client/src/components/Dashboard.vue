@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {state} from "../socket";
 import {$getTimeStringFromSeconds} from "../helpers/time";
+import {$percentage} from "../helpers/numbers";
 </script>
 
 <template>
@@ -11,7 +12,8 @@ import {$getTimeStringFromSeconds} from "../helpers/time";
         <div>
           <div class="flex items-center gap-x-3">
             <div
-                class="flex-none rounded-full bg-green-400/10 p-1"
+                @click="state.connected ? disconnect() : connect()"
+                class="flex-none rounded-full bg-green-400/10 p-1 cursor-pointer"
                 :class="[state.connected ? 'text-green-400' : 'text-red-500']"
             >
               <div class="h-2 w-2 rounded-full bg-current" />
@@ -52,7 +54,7 @@ import {$getTimeStringFromSeconds} from "../helpers/time";
           <p class="text-sm font-medium leading-6 text-gray-400 tracking-wider">Tire Degradation</p>
           <p v-if="state.activeSession" class="mt-2 flex items-baseline gap-x-2">
             <span class="text-5xl font-semibold tracking-tight text-white">
-              12 %
+              {{ $percentage(state.activeSession.avgTireWear * -1, 1) }} %
             </span>
             <span class="text-sm text-gray-400"> / lap </span>
           </p>
@@ -64,7 +66,7 @@ import {$getTimeStringFromSeconds} from "../helpers/time";
           <p class="text-sm font-medium leading-6 text-gray-400 tracking-wider">Fuel Consumption</p>
           <p v-if="state.activeSession" class="mt-2 flex items-baseline gap-x-2">
             <span class="text-5xl font-semibold tracking-tight text-white">
-              5 %
+              {{ $percentage(state.activeSession.avgFuelUsage * -1, 1) }} %
             </span>
             <span class="text-sm text-gray-400"> / lap </span>
           </p>
@@ -76,8 +78,80 @@ import {$getTimeStringFromSeconds} from "../helpers/time";
           <p class="text-sm font-medium leading-6 text-gray-400 tracking-wider">Best Lap</p>
           <p v-if="state.activeSession" class="mt-2 flex items-baseline gap-x-2">
             <span class="text-5xl font-semibold tracking-tight text-white">
-              {{ $getTimeStringFromSeconds(state.activeSession.last_packet.BestLap) }}
+              {{ $getTimeStringFromSeconds(state.activeSession.bestLapTime) }}
             </span>
+          </p>
+          <p v-else class="mt-2 flex items-baseline gap-x-2">
+            <span class="text-5xl font-semibold tracking-tight text-white">-</span>
+          </p>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 bg-gray-800/10 sm:grid-cols-2 lg:grid-cols-5">
+        <div class="border-t border-white/5 py-6 px-4 sm:px-6 lg:px-8">
+          <p class="text-sm font-medium leading-6 text-gray-400 tracking-wide">
+            Fuel
+          </p>
+          <p v-if="state.activeSession" class="mt-2 flex items-baseline gap-x-2">
+            <span class="text-3xl font-semibold tracking-tight text-white">
+              {{ $percentage(state.activeSession.currentFuel, 2) }}
+            </span>
+            <span class="text-sm text-gray-400">%</span>
+          </p>
+          <p v-else class="mt-2 flex items-baseline gap-x-2">
+            <span class="text-3xl font-semibold tracking-tight text-white">-</span>
+          </p>
+        </div>
+        <div class="border-t border-white/5 py-6 px-4 sm:px-6 lg:px-8 sm:border-l">
+          <p class="text-sm font-medium leading-6 text-gray-400 tracking-wide">
+            Tire Wear (FL)
+          </p>
+          <p v-if="state.activeSession" class="mt-2 flex items-baseline gap-x-2">
+            <span class="text-3xl font-semibold tracking-tight text-white">
+              {{ $percentage(state.activeSession.currentWearFL, 2) }}
+            </span>
+            <span class="text-sm text-gray-400">%</span>
+          </p>
+          <p v-else class="mt-2 flex items-baseline gap-x-2">
+            <span class="text-3xl font-semibold tracking-tight text-white">-</span>
+          </p>
+        </div>
+        <div class="border-t border-white/5 py-6 px-4 sm:px-6 lg:px-8 sm:border-l">
+          <p class="text-sm font-medium leading-6 text-gray-400 tracking-wide">
+            Tire Wear (FR)
+          </p>
+          <p v-if="state.activeSession" class="mt-2 flex items-baseline gap-x-2">
+            <span class="text-3xl font-semibold tracking-tight text-white">
+              {{ $percentage(state.activeSession.currentWearFR, 2) }}
+            </span>
+            <span class="text-sm text-gray-400">%</span>
+          </p>
+          <p v-else class="mt-2 flex items-baseline gap-x-2">
+            <span class="text-3xl font-semibold tracking-tight text-white">-</span>
+          </p>
+        </div>
+        <div class="border-t border-white/5 py-6 px-4 sm:px-6 lg:px-8 sm:border-l">
+          <p class="text-sm font-medium leading-6 text-gray-400 tracking-wide">
+            Tire Wear (RL)
+          </p>
+          <p v-if="state.activeSession" class="mt-2 flex items-baseline gap-x-2">
+            <span class="text-3xl font-semibold tracking-tight text-white">
+              {{ $percentage(state.activeSession.currentWearRL, 2) }}
+            </span>
+            <span class="text-sm text-gray-400">%</span>
+          </p>
+          <p v-else class="mt-2 flex items-baseline gap-x-2">
+            <span class="text-3xl font-semibold tracking-tight text-white">-</span>
+          </p>
+        </div>
+        <div class="border-t border-white/5 py-6 px-4 sm:px-6 lg:px-8 sm:border-l">
+          <p class="text-sm font-medium leading-6 text-gray-400 tracking-wide">
+            Tire Wear (RR)
+          </p>
+          <p v-if="state.activeSession" class="mt-2 flex items-baseline gap-x-2">
+            <span class="text-3xl font-semibold tracking-tight text-white">
+              {{ $percentage(state.activeSession.currentWearRR, 2) }}
+            </span>
+            <span class="text-sm text-gray-400">%</span>
           </p>
           <p v-else class="mt-2 flex items-baseline gap-x-2">
             <span class="text-5xl font-semibold tracking-tight text-white">-</span>
@@ -92,20 +166,13 @@ import {$getTimeStringFromSeconds} from "../helpers/time";
         Session Laps
       </h2>
       <table class="mt-6 w-full whitespace-nowrap text-left">
-        <colgroup>
-<!--          <col class="lg:w-1/12" />-->
-<!--          <col class="lg:w-3/12" />-->
-<!--          <col class="lg:w-2/12" />-->
-<!--          <col class="lg:w-1/12" />-->
-<!--          <col class="lg:w-1/12" />-->
-<!--          <col class="lg:w-1/12" />-->
-<!--          <col class="lg:w-1/12" />-->
-<!--          <col class="lg:w-2/12" />-->
-        </colgroup>
         <thead class="font-mono border-b border-white/10 text-sm leading-6 text-white">
         <tr>
           <th scope="col" class="py-2 pl-4 pr-8 font-semibold sm:pl-6 lg:pl-8">
             Lap
+          </th>
+          <th scope="col" class="py-2 pl-0 pr-8 font-semibold">
+            Stint
           </th>
           <th scope="col" class="py-2 font-semibold">
             Time
@@ -134,14 +201,21 @@ import {$getTimeStringFromSeconds} from "../helpers/time";
         <tr
             v-for="lap in laps" :key="lap.Number"
             :class="{
-              'bg-purple-500/20': lap.Number > 1 && lap.IsAllTimeBest,
-              'bg-green-500/20': ! lap.IsAllTimeBest && lap.IsBestAtTime,
+              'bg-purple-700/20': lap.Number > 1 && lap.IsAllTimeBest,
+              'bg-green-700/20': lap.Number > 1 && ! lap.IsAllTimeBest && lap.IsBestAtTime,
             }"
         >
           <td class="pl-4 pr-8 sm:pl-6 lg:pl-8">
             <div class="flex pl-0 items-center gap-x-4">
               <div class="truncate font-mono font-medium leading-6 text-white">
                 {{ lap.Number.toString().padStart(2, '0') }}
+              </div>
+            </div>
+          </td>
+          <td class="pl-0 pr-8">
+            <div class="flex pl-0 items-center gap-x-4">
+              <div class="truncate font-mono font-medium leading-6 text-white">
+                01
               </div>
             </div>
           </td>
@@ -152,37 +226,22 @@ import {$getTimeStringFromSeconds} from "../helpers/time";
               </div>
             </div>
           </td>
-<!--          <td class="font-mono hidden sm:table-cell py-4 pl-0 pr-4 text-sm leading-6 sm:pr-8 lg:pr-20">-->
-<!--            <div class="flex items-center justify-end gap-x-2 sm:justify-start">-->
-<!--              <div-->
-<!--                  class="flex-none rounded-full p-1"-->
-<!--                  :class="{-->
-<!--                    'text-neutral-400 bg-neutral-300/10': lap.Number === 1 || ! lap.IsBestAtTime && ! lap.IsAllTimeBest,-->
-<!--                    'text-purple-400 bg-purple-400/10': lap.Number > 1 && lap.IsAllTimeBest,-->
-<!--                    'text-green-400 bg-green-400/10': lap.Number > 1 && lap.IsBestAtTime && ! lap.IsAllTimeBest,-->
-<!--                  }"-->
-<!--              >-->
-<!--                <div class="h-2 w-2 rounded-full bg-current" />-->
-<!--              </div>-->
-<!--              <div class="hidden text-white sm:block">-->
-<!--                {{ lap.Number === 1 ? '' : lap.IsAllTimeBest ? 'Best' : (lap.IsBestAtTime) ? 'Improved' : '' }}-->
-<!--              </div>-->
-<!--            </div>-->
-<!--          </td>-->
-          <td class="hidden py-4 pl-0 leading-6 text-neutral-50 md:table-cell">
-            12 %
+          <td class="hidden py-4 pl-0 leading-6 text-neutral-200 md:table-cell">
+            {{ $percentage(lap.AvgWear * -1, 2) }} %
           </td>
-          <td class="hidden py-4 pl-0 leading-6 text-neutral-50 sm:table-cell">
-            5 %
+          <td class="hidden py-4 pl-0 leading-6 text-neutral-200 sm:table-cell">
+            {{ $percentage(lap.DeltaFuel * -1, 2) }} %
           </td>
-          <td class="hidden py-4 pl-0 leading-6 text-neutral-50 md:table-cell">
-            293 km/h
+          <td class="hidden py-4 pl-0 leading-6 text-neutral-200 md:table-cell">
+            {{ (lap.MaxSpeed * 3.6).toFixed() }} km/h
           </td>
-          <td class="hidden py-4 pl-0 leading-6 text-neutral-50 sm:table-cell">
-            70 km/h
+          <td class="hidden py-4 pl-0 leading-6 text-neutral-200 sm:table-cell">
+            {{ (lap.MinSpeed * 3.6).toFixed() }} km/h
           </td>
-          <td class="hidden py-4 pl-0 pr-4 leading-6 text-neutral-50 sm:table-cell sm:pr-6 lg:pr-8">
-            <span class="text-green-300 text-base pr-2">&#9650;</span> 3
+          <td class="hidden py-4 pl-1.5 pr-4 leading-6 text-neutral-50 sm:table-cell sm:pr-6 lg:pr-8">
+            <span v-if="lap.PositionChanges > 0" class="text-green-300 text-base pr-1">&#9650;</span>
+            <span v-if="lap.PositionChanges < 0" class="text-rose-400 text-base pr-1">&#9650;</span>
+            {{ lap.PositionChanges }}
           </td>
         </tr>
         </tbody>
@@ -202,13 +261,13 @@ export default defineComponent({
   name: 'Dashboard',
 
   methods: {
-    // connect() {
-    //   socket.connect();
-    // },
-    //
-    // disconnect() {
-    //   socket.disconnect();
-    // },
+    connect() {
+      socket.connect();
+    },
+
+    disconnect() {
+      socket.disconnect();
+    },
   },
 
   computed: {
@@ -258,8 +317,8 @@ export default defineComponent({
         return [];
       }
 
-      return state.activeSession.laps.reverse().map(function (lap) {
-        lap.IsAllTimeBest = state.activeSession?.last_packet?.BestLap === lap.Time;
+      return state.activeSession.laps.reverse().map(function (lap: Lap) {
+        lap.IsAllTimeBest = state.activeSession?.bestLapTime === lap.Time;
         return lap;
       });
     }

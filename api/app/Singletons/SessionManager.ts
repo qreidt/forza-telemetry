@@ -29,25 +29,7 @@ class SessionManager {
     });
 
     this.poolingInterval = setInterval(() => {
-      Websocket.io.emit('active-session', {
-        currentTrackOrdinal: this.currentTrackOrdinal,
-        currentCarOrdinal: this.currentCarOrdinal,
-        currentLap: this.currentLap + 1,
-        currentLapTime: this.currentLapTime,
-        lastLapTime: this.lastLapTime,
-        lapStartingDistance: this.lapStartingDistance,
-        lapCurrentDistance: this.lapCurrentDistance,
-        lapStartingFuel: this.lapStartingFuel,
-        lapStartingWearFL: this.lapStartingWearFL,
-        lapStartingWearFR: this.lapStartingWearFR,
-        lapStartingWearRL: this.lapStartingWearRL,
-        lapStartingWearRR: this.lapStartingWearRR,
-        currentWearFL: this.currentWearFL,
-        currentWearFR: this.currentWearFR,
-        currentWearRL: this.currentWearRL,
-        currentWearRR: this.currentWearRR,
-        laps: this.laps
-      });
+      Websocket.io.emit('active-session', this.export());
     }, 1000);
 
     Logger.info('Session Ingest Worker Setup.');
@@ -75,13 +57,15 @@ class SessionManager {
   public localSessionStartTime: number|null = null;
 
   // Ordinals
-  public currentTrackOrdinal: number = 0;
-  public currentCarOrdinal: number = 0;
+  public currentTrackOrdinal: string = '';
+  public currentCarOrdinal: string = '';
 
   // Lap Number and Times
   public currentLap: number = 0;
   public currentLapTime: number = 0;
-  public lastLapTime: number;
+  public lastLapTime: number = 0;
+  public bestLapTime: number = 0;
+  public avgLapTime: number = 0;
 
   // Distance
   public lapStartingDistance: number = 0;
@@ -89,6 +73,8 @@ class SessionManager {
 
   // Fuel
   public lapStartingFuel: number = 0;
+  public currentFuel: number = 0;
+  public avgFuelUsage: number = 0;
 
   // Wear
   public lapStartingWearFL: number = 0;
@@ -99,6 +85,14 @@ class SessionManager {
   public currentWearFR: number = 0;
   public currentWearRL: number = 0;
   public currentWearRR: number = 0;
+  public avgTireWear: number = 0;
+
+  // Speed
+  public lapMaxSpeed: number = 0;
+  public lapMinSpeed: number = 0;
+
+  // Position
+  public lapStartingPosition: number = 0;
 
   // debug
   public last_packet: DataPacket;
@@ -119,7 +113,7 @@ class SessionManager {
     this.setLocalSessionStartTime(data);
 
     this.updateLap(data);
-    this.updateWear(data);
+    this.updateCurrentState(data);
 
     this.last_packet = data;
 
@@ -134,8 +128,8 @@ class SessionManager {
   private checkSessionChanged(data: DataPacket): boolean {
     if (
       data.SessionTimeMS < this.currentSessionTime
-      || data.CarOrdinal !== this.currentCarOrdinal
-      || data.TrackOrdinal !== this.currentTrackOrdinal
+      || data.CarOrdinal.toString() !== this.currentCarOrdinal
+      || data.TrackOrdinal.toString() !== this.currentTrackOrdinal
       || data.LapNumber < this.currentLap
       || data.DistanceTraveled < this.lapStartingDistance
     ) {
@@ -151,13 +145,28 @@ class SessionManager {
   private resetSession(data: DataPacket): void {
     this.localSessionStartTime = null;
     this.currentLap = 0;
-    this.currentTrackOrdinal = data.TrackOrdinal;
-    this.currentCarOrdinal = data.CarOrdinal;
+
+    // Ordinals
+    this.currentTrackOrdinal = data.TrackOrdinal.toString();
+    this.currentCarOrdinal = data.CarOrdinal.toString();
+
+    // Lap Times
     this.currentLapTime = 0;
     this.lastLapTime = 0;
+    this.lastLapTime = 0;
+    this.bestLapTime = 0;
+    this.avgLapTime = 0;
+
+    // Distances
     this.lapStartingDistance = 0;
     this.lapCurrentDistance = 0;
+
+    // Fuel
     this.lapStartingFuel = data.Fuel;
+    this.currentFuel = data.Fuel;
+    this.avgFuelUsage = 0;
+
+    // Wear
     this.lapStartingWearFL = 0;
     this.lapStartingWearFR = 0;
     this.lapStartingWearRL = 0;
@@ -166,6 +175,14 @@ class SessionManager {
     this.currentWearFR = 0;
     this.currentWearRL = 0;
     this.currentWearRR = 0;
+    this.avgTireWear = 0;
+
+    // Speed
+    this.lapMaxSpeed = data.Speed;
+    this.lapMinSpeed = data.Speed;
+
+    // Position
+    this.lapStartingPosition = data.RacePosition;
     this.laps = [];
   }
 
@@ -229,17 +246,25 @@ class SessionManager {
 
   /** Compilar dados da ultima volta e preparar dados para nova volta iniciada */
   private wrapupLap(data: DataPacket): void {
-
     this.laps.push({
       Number: this.currentLap + 1,
       Time: data.LastLap,
       IsBestAtTime: data.LastLap === data.BestLap,
       DeltaDistance: data.DistanceTraveled - this.lapStartingDistance,
       DeltaFuel: data.Fuel - this.lapStartingFuel,
+      MaxSpeed: this.lapMaxSpeed,
+      MinSpeed: this.lapMinSpeed,
+      PositionChanges: this.lapStartingPosition - data.RacePosition,
       DeltaWearFL: this.lapStartingWearFL - data.TireWearFrontLeft,
       DeltaWearFR: this.lapStartingWearFR - data.TireWearFrontRight,
       DeltaWearRL: this.lapStartingWearRL - data.TireWearRearLeft,
-      DeltaWearRR: this.lapStartingWearRR - data.TireWearRearRight
+      DeltaWearRR: this.lapStartingWearRR - data.TireWearRearRight,
+      AvgWear: MathHelper.getAverage([
+        this.lapStartingWearFL - data.TireWearFrontLeft,
+        this.lapStartingWearFR - data.TireWearFrontRight,
+        this.lapStartingWearRL - data.TireWearRearLeft,
+        this.lapStartingWearRR - data.TireWearRearRight,
+      ]),
     });
 
     this.currentLap = data.LapNumber;
@@ -250,30 +275,61 @@ class SessionManager {
     this.lapStartingWearFR = data.TireWearFrontRight;
     this.lapStartingWearRL = data.TireWearRearLeft;
     this.lapStartingWearRR = data.TireWearFrontRight;
+    this.lapMaxSpeed = data.Speed;
+    this.lapMinSpeed = data.Speed;
+    this.bestLapTime = data.BestLap;
+    this.lapStartingPosition = data.RacePosition;
+
+    // Update Averages
+    this.avgLapTime = MathHelper.getAverage(this.laps.map((lap) => lap.Time));
+    this.avgFuelUsage = MathHelper.getAverage(this.laps.map((lap) => lap.DeltaFuel));
+    this.avgTireWear = MathHelper.getAverage(this.laps.map((lap) => lap.AvgWear));
   }
 
   /** Atualizar estado de degradação dos pneus */
-  private updateWear(data: DataPacket): void {
+  private updateCurrentState(data: DataPacket): void {
+    this.currentFuel = data.Fuel;
     this.currentWearFL = data.TireWearFrontLeft;
     this.currentWearFR = data.TireWearFrontRight;
     this.currentWearRL = data.TireWearRearLeft;
     this.currentWearRR = data.TireWearRearRight;
+
+    if (data.Speed > this.lapMaxSpeed) {
+      this.lapMaxSpeed = data.Speed;
+    } else if (data.Speed < this.lapMinSpeed) {
+      this.lapMinSpeed = data.Speed;
+    }
+
   }
 
   /** Facilitador para publicação de dados */
   public export(): any|object {
     return {
-      lastSession: this.lastSession,
+
       currentSessionTime: this.currentSessionTime,
       localSessionStartTime: this.localSessionStartTime,
+
+      // Ordinals
       currentTrackOrdinal: this.currentTrackOrdinal,
       currentCarOrdinal: this.currentCarOrdinal,
+
+      // Lap Times
       currentLap: this.currentLap,
       currentLapTime: this.currentLapTime,
       lastLapTime: this.lastLapTime,
+      bestLapTime: this.bestLapTime,
+      avgLapTime: this.avgLapTime,
+
+      // Distances
       lapStartingDistance: this.lapStartingDistance,
       lapCurrentDistance: this.lapCurrentDistance,
+
+      // Fuel
       lapStartingFuel: this.lapStartingFuel,
+      currentFuel: this.currentFuel,
+      avgFuelUsage: this.avgFuelUsage,
+
+      // Wear
       lapStartingWearFL: this.lapStartingWearFL,
       lapStartingWearFR: this.lapStartingWearFR,
       lapStartingWearRL: this.lapStartingWearRL,
@@ -282,7 +338,18 @@ class SessionManager {
       currentWearFR: this.currentWearFR,
       currentWearRL: this.currentWearRL,
       currentWearRR: this.currentWearRR,
+      avgTireWear: this.avgTireWear,
+
+      // Speeed
+      lapMaxSpeed: this.lapMaxSpeed,
+      lapMinSpeed: this.lapMinSpeed,
+
+      // Position
+      lapStartingPosition: this.lapStartingPosition,
+
+      // Extras
       laps: this.laps,
+      lastSession: this.lastSession,
       last_packet: this.last_packet,
     };
   }
@@ -320,11 +387,18 @@ type Lap = {
   // Fuel
   DeltaFuel: number,
 
+  MaxSpeed: number,
+  MinSpeed: number,
+
   // Wear
   DeltaWearFL: number,
   DeltaWearFR: number,
   DeltaWearRL: number,
   DeltaWearRR: number,
+  AvgWear: number,
+
+  // Position
+  PositionChanges: number
 };
 
 export default new SessionManager();
