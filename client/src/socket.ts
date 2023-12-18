@@ -1,10 +1,9 @@
 import {reactive} from 'vue';
-import type { UnwrapNestedRefs } from 'vue';
 import { io } from 'socket.io-client';
 import type {ActiveSession, SessionState} from "./types/Session";
-// import sessionData from './data/mock-session-data.json'
+//import sessionData from './data/mock-session-data.json'
 
-export const state: UnwrapNestedRefs<SessionState> = reactive({
+export const state: SessionState = reactive({
     connected: false,
     activeSession: reactive(null)
 });
@@ -27,5 +26,4 @@ socket.on("disconnect", () => {
 
 socket.on('active-session', (data: ActiveSession) => {
     state.activeSession = data;
-    console.log(data);
 });

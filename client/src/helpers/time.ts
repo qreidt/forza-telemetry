@@ -7,3 +7,14 @@ export function $getTimeStringFromSeconds(seconds: number): string {
 
     return `${mins}:${secs.padStart(2, '0')}.${millis ?? '000'}`;
 }
+
+export function $diffTime(best_time: number, comp_time: number): string {
+    if (best_time === comp_time) {
+        return '';
+    }
+
+    const diff = comp_time - best_time;
+    return (diff >= 0)
+        ? '+ ' + diff.toFixed(3)
+        : '- ' + (diff * -1).toFixed(3);
+}

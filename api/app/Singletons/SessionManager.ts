@@ -357,8 +357,8 @@ class SessionManager {
 
 type TelemetrySession = {
   lap_count: number,
-  car_ordinal: number,
-  track_ordinal: number,
+  car_ordinal: string,
+  track_ordinal: string,
 
   avg_lap_time: number|null,
   median_lap_time: number|null,

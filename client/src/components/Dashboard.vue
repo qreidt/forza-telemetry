@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {state} from "../socket";
-import {$getTimeStringFromSeconds} from "../helpers/time";
+import {$diffTime, $getTimeStringFromSeconds} from "../helpers/time";
 import {$percentage} from "../helpers/numbers";
 </script>
 
@@ -177,6 +177,9 @@ import {$percentage} from "../helpers/numbers";
           <th scope="col" class="py-2 font-semibold">
             Time
           </th>
+          <th scope="col" class="py-2 font-semibold">
+            Diff.
+          </th>
 <!--          <th scope="col" class="py-2 pl-0 pr-4 text-right font-semibold sm:pr-8 sm:text-left lg:pr-20">-->
 <!--            Class.-->
 <!--          </th>-->
@@ -220,11 +223,14 @@ import {$percentage} from "../helpers/numbers";
             </div>
           </td>
           <td class="py-4 pl-0 pr-4">
-            <div class="flex gap-x-3">
-              <div class="font-mono leading-6 text-neutral-50">
-                {{ $getTimeStringFromSeconds(lap.Time) }}
-              </div>
+            <div class="font-mono leading-6 text-neutral-50">
+              {{ $getTimeStringFromSeconds(lap.Time) }}
             </div>
+          </td>
+          <td class="py-4 pl-0 pr-4">
+              <div class="font-mono leading-6 text-neutral-50">
+                {{ $diffTime(state.activeSession.bestLapTime, lap.Time) }}
+              </div>
           </td>
           <td class="hidden py-4 pl-0 leading-6 text-neutral-200 md:table-cell">
             {{ $percentage(lap.AvgWear * -1, 2) }} %
