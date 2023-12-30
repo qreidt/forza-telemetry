@@ -7,11 +7,9 @@ export default class extends BaseSchema {
     this.schema.createTable(this.tableName, (table) => {
       table.bigIncrements('id').primary();
 
-      table.integer('track_code');
-      table.integer('car_code');
-
-      table.timestamp('started_at');
-      table.timestamp('ended_at');
+      table.integer('track_ordinal');
+      table.integer('car_ordinal');
+      table.json('light_data').nullable();
 
       table.timestamps({useTimestamps: true});
     });

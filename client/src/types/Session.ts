@@ -4,6 +4,7 @@ export type SessionState = {
 };
 
 export type ActiveSession = {
+    sessionId: string|null,
     lastSession: number,
     currentSessionTime: number,
     localSessionStartTime: number,

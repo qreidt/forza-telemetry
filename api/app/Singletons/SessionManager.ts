@@ -2,7 +2,9 @@ import {DataPacket} from "App/Services/DataPacketService";
 import Logger from "@ioc:Adonis/Core/Logger";
 import Websocket from "App/Sockets/Websocket";
 import MathHelper from "App/Helpers/MathHelper";
-
+import type {Session, Lap, SessionPacket} from 'Contracts/db/session';
+import SessionModel from 'App/Models/Session';
+import SessionService from 'App/Services/SessionService';
 
 class SessionManager {
 
@@ -48,9 +50,11 @@ class SessionManager {
     this.queue.push(data);
   }
 
-  public lastSession: TelemetrySession;
-  private sessionData: SessionPacket[] = [];
+  public lastSession: Session;
   public laps: Lap[] = [];
+
+  // ID
+  public sessionId = 0;
 
   // Session Time
   public currentSessionTime = 0;
@@ -66,6 +70,7 @@ class SessionManager {
   public lastLapTime: number = 0;
   public bestLapTime: number = 0;
   public avgLapTime: number = 0;
+  public medianLapTime: number = 0;
 
   // Distance
   public lapStartingDistance: number = 0;
@@ -94,6 +99,9 @@ class SessionManager {
   // Position
   public lapStartingPosition: number = 0;
 
+  // Raw data
+  private lapData: SessionPacket[] = [];
+
   // debug
   public last_packet: DataPacket;
 
@@ -116,12 +124,6 @@ class SessionManager {
     this.updateCurrentState(data);
 
     this.last_packet = data;
-
-    this.sessionData.push({
-      ...data,
-      LapStartingDistance: this.lapStartingDistance,
-      CurrentLapDistance: this.lapCurrentDistance
-    });
   }
 
   /** Verificar se foi iniciada uma nova sessão */
@@ -143,6 +145,8 @@ class SessionManager {
 
   /** Resetar dados para uma nova sessão e compilar dados da sessão antiga */
   private resetSession(data: DataPacket): void {
+    this.sessionId = 0;
+
     this.localSessionStartTime = null;
     this.currentLap = 0;
 
@@ -152,7 +156,6 @@ class SessionManager {
 
     // Lap Times
     this.currentLapTime = 0;
-    this.lastLapTime = 0;
     this.lastLapTime = 0;
     this.bestLapTime = 0;
     this.avgLapTime = 0;
@@ -192,34 +195,8 @@ class SessionManager {
       return;
     }
 
-    // Lap Time
-    const lap_times = this.laps.map<number>((lap) => lap.Time);
-    const avg_lap_time = MathHelper.getAverage(lap_times);
-    const median_lap_time = MathHelper.getMedian(lap_times);
-    const best_lap_time = MathHelper.getMin(lap_times);
-
-    const fuel_usage_per_lap = MathHelper.getAverage(
-      this.laps.map((lap) => lap.DeltaFuel * -1)
-    );
-
-    const tire_degradation_per_lap = MathHelper.getAverage(
-      this.laps.map((lap) => MathHelper.getAverage([
-        lap.DeltaWearFL, lap.DeltaWearFR,
-        lap.DeltaWearRL, lap.DeltaWearRR
-      ]) * -1)
-    );
-
-    this.lastSession = {
-      lap_count: this.laps.length,
-      car_ordinal: this.currentCarOrdinal,
-      track_ordinal: this.currentTrackOrdinal,
-      avg_lap_time,
-      median_lap_time,
-      best_lap_time,
-      fuel_usage_per_lap,
-      tire_degradation_per_lap,
-      laps: this.laps
-    };
+    this.lastSession = this.currentSession;
+    //SessionService.persistSession(this.lastSession);
   }
 
   /** Atualizar timestamp de início da sessão */
@@ -242,12 +219,28 @@ class SessionManager {
     this.lastLapTime = data.LastLap;
 
     this.lapCurrentDistance = data.DistanceTraveled - this.lapStartingDistance;
+
+    this.lapData.push({
+      ...data,
+      LapStartingDistance: this.lapStartingDistance,
+      CurrentLapDistance: this.lapCurrentDistance
+    });
   }
 
   /** Compilar dados da ultima volta e preparar dados para nova volta iniciada */
-  private wrapupLap(data: DataPacket): void {
-    this.laps.push({
-      Number: this.currentLap + 1,
+  private async wrapupLap(data: DataPacket): Promise<void> {
+    if (this.laps.length === 0) {
+      const { id } = await SessionModel.create({
+        trackOrdinal: this.currentTrackOrdinal,
+        carOrdinal: this.currentCarOrdinal,
+      });
+
+      this.sessionId = id;
+    }
+
+    const lap: Lap = {
+      SessionId: this.sessionId,
+      Number: this.currentLap,
       Time: data.LastLap,
       IsBestAtTime: data.LastLap === data.BestLap,
       DeltaDistance: data.DistanceTraveled - this.lapStartingDistance,
@@ -265,7 +258,10 @@ class SessionManager {
         this.lapStartingWearRL - data.TireWearRearLeft,
         this.lapStartingWearRR - data.TireWearRearRight,
       ]),
-    });
+      Data: this.lapData
+    };
+
+    this.laps.push(lap);
 
     this.currentLap = data.LapNumber;
     this.lastLapTime = data.LastLap;
@@ -279,11 +275,16 @@ class SessionManager {
     this.lapMinSpeed = data.Speed;
     this.bestLapTime = data.BestLap;
     this.lapStartingPosition = data.RacePosition;
+    this.lapData = [];
 
     // Update Averages
     this.avgLapTime = MathHelper.getAverage(this.laps.map((lap) => lap.Time));
+    this.medianLapTime = MathHelper.getMedian(this.laps.map((lap) => lap.Time));
     this.avgFuelUsage = MathHelper.getAverage(this.laps.map((lap) => lap.DeltaFuel));
     this.avgTireWear = MathHelper.getAverage(this.laps.map((lap) => lap.AvgWear));
+
+    // Persist
+    SessionService.persistLap(this.currentSession, lap);
   }
 
   /** Atualizar estado de degradação dos pneus */
@@ -306,6 +307,9 @@ class SessionManager {
   public export(): any|object {
     return {
 
+      sessionId: this.sessionId > 0 ? `S_${this.sessionId.toString().padStart(5, '0')}` : null,
+
+      currentLap: this.currentLap + 1,
       currentSessionTime: this.currentSessionTime,
       localSessionStartTime: this.localSessionStartTime,
 
@@ -314,7 +318,6 @@ class SessionManager {
       currentCarOrdinal: this.currentCarOrdinal,
 
       // Lap Times
-      currentLap: this.currentLap,
       currentLapTime: this.currentLapTime,
       lastLapTime: this.lastLapTime,
       bestLapTime: this.bestLapTime,
@@ -353,52 +356,21 @@ class SessionManager {
       last_packet: this.last_packet,
     };
   }
+
+  get currentSession(): Session {
+    return {
+      ID: this.sessionId,
+      LapCount: this.laps.length,
+      CarOrdinal: this.currentCarOrdinal,
+      TrackOrdinal: this.currentTrackOrdinal,
+      AvgLapTime: this.avgLapTime,
+      MedianLapTime: this.medianLapTime,
+      BestLapTime: this.bestLapTime,
+      FuelUsagePerLap: this.avgFuelUsage,
+      TireWearPerLap: this.avgTireWear,
+      Laps: this.laps
+    };
+  }
 }
-
-type TelemetrySession = {
-  lap_count: number,
-  car_ordinal: string,
-  track_ordinal: string,
-
-  avg_lap_time: number|null,
-  median_lap_time: number|null,
-  best_lap_time: number|null,
-
-  fuel_usage_per_lap: number|null,
-  tire_degradation_per_lap: number|null,
-
-  laps: Lap[]
-};
-
-// @ts-ignore
-type SessionPacket = DataPacket & {
-  LapStartingDistance: number,
-  CurrentLapDistance: number
-};
-
-type Lap = {
-  Number: number,
-  Time: number,
-  IsBestAtTime: boolean,
-
-  // Distance
-  DeltaDistance: number,
-
-  // Fuel
-  DeltaFuel: number,
-
-  MaxSpeed: number,
-  MinSpeed: number,
-
-  // Wear
-  DeltaWearFL: number,
-  DeltaWearFR: number,
-  DeltaWearRL: number,
-  DeltaWearRR: number,
-  AvgWear: number,
-
-  // Position
-  PositionChanges: number
-};
 
 export default new SessionManager();

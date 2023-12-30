@@ -33,7 +33,7 @@ import {$percentage} from "../helpers/numbers";
           </p>
         </div>
         <div class="order-first flex-none rounded-full bg-indigo-400/10 px-2 py-1 text-xs font-medium text-indigo-400 ring-1 ring-inset ring-indigo-400/30 sm:order-none">
-          S_00023
+          {{ state.activeSession?.sessionId ?? 'Inactive' }}
         </div>
       </div>
 
@@ -278,7 +278,7 @@ export default defineComponent({
 
   computed: {
     currentTrack(): Track {
-      if (!state.activeSession || state.activeSession.currentCarOrdinal === 0) {
+      if (!state.activeSession || state.activeSession.currentCarOrdinal === '') {
         return {
           Circuit: '',
           IOCCode: '',
@@ -300,7 +300,7 @@ export default defineComponent({
           };
     },
     currentCar(): Car {
-      if (!state.activeSession || state.activeSession.currentCarOrdinal === 0) {
+      if (!state.activeSession || state.activeSession.currentCarOrdinal === '') {
         return {
           Ordinal: '',
           Year: '',
