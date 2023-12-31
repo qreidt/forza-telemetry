@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import {state} from "../socket";
-import {$diffTime, $getTimeStringFromSeconds} from "../helpers/time";
-import {$percentage} from "../helpers/numbers";
+import {state} from "../../socket";
+import {$diffTime, $getTimeStringFromSeconds} from "../../helpers/time";
+import {$percentage} from "../../helpers/numbers";
+
 </script>
 
 <template>
@@ -258,10 +259,10 @@ import {$percentage} from "../helpers/numbers";
 
 <script lang="ts">
 import {defineComponent} from 'vue';
-import {socket, state} from "../socket";
-import tracks from '../data/tracks.json';
-import cars from '../data/cars.json';
-import type {Lap} from "../types/Session";
+import {socket, state} from "../../socket";
+import tracks from '../../data/tracks.json';
+import cars from '../../data/cars.json';
+import type {Lap} from "../../types/Session";
 
 export default defineComponent({
   name: 'Dashboard',

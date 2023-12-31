@@ -13,7 +13,9 @@ const URL = process.env.NODE_ENV === "production"
     ? undefined
     : "ws://127.0.0.1:3333";
 
-export const socket = io(URL);
+export const socket = io(URL, {
+    autoConnect: false
+});
 // export const socket = {};
 
 socket.on("connect", () => {
