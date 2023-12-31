@@ -6,23 +6,32 @@ export default class Session extends BaseModel {
   @column({ isPrimary: true })
   public id: number;
 
-  @column({columnName: 'track_ordinal'})
+  @column({
+    columnName: 'track_ordinal',
+    serialize: (v) => v.toString(),
+    serializeAs: 'trackOrdinal',
+  })
   public trackOrdinal: string;
 
-  @column({columnName: 'car_ordinal'})
+  @column({
+    columnName: 'car_ordinal',
+    serialize: (v) => v.toString(),
+    serializeAs: 'carOrdinal',
+  })
   public carOrdinal: string;
 
   @column({
     columnName: 'light_data',
+    serializeAs: 'lightData',
     consume: Session.stringToJson,
     prepare: Session.jsonToString
   })
   public lightData: SessionContract|null
 
-  @column.dateTime({ autoCreate: true })
+  @column.dateTime({ autoCreate: true, serializeAs: 'createdAt' })
   public createdAt: DateTime;
 
-  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  @column.dateTime({ autoCreate: true, autoUpdate: true, serializeAs: 'updatedAt' })
   public updatedAt: DateTime;
 
   get idLabel(): string {

@@ -1,8 +1,17 @@
 <script setup lang="ts">
-const secondaryNavigation = [
-  { name: 'Live', href: '/' },
-  { name: 'History', href: '/history' },
-];
+import {computed} from "vue";
+import {useRouter} from "vue-router";
+
+const router = useRouter();
+const currentSession = computed(() => {
+  const current_route = router.currentRoute.value
+  if (current_route.name !== 'Session') {
+    return null;
+  }
+
+  const session_id = current_route.params.session_id.toString() as string;
+  return `S${session_id.padStart(5, '0')}`;
+});
 </script>
 
 <template>
@@ -15,9 +24,16 @@ const secondaryNavigation = [
             Live
           </RouterLink>
 
-          <RouterLink to="/sessions" active-class="text-indigo-400">
+          <RouterLink
+              to="/sessions" active-class="text-indigo-400"
+              :class="{'text-indigo-400': currentSession}"
+          >
             Previous Sessions
           </RouterLink>
+
+          <li v-if="currentSession" class="text-indigo-400">
+            {{ currentSession }}
+          </li>
         </ul>
       </nav>
     </header>

@@ -13,13 +13,11 @@ const router = createRouter({
         { path: '/', name: 'Live', component: DashboardPage },
 
         // Previous Sessions
-        {
-            path: '/sessions', name: 'PreviousSessions', component: PreviousSessionsPage,
-            children: [
-                { path: '/sessions/:session_id', name: 'Session', component: SessionPage }
-            ]
-        }
-    ]
+        { path: '/sessions', name: 'PreviousSessions', component: PreviousSessionsPage },
+
+        // Session
+        { path: '/sessions/:session_id', name: 'Session', component: SessionPage }
+    ],
 });
 
 createApp(App)

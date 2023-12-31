@@ -4,11 +4,12 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host=127.0.0.1",
     "build": "vue-tsc && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@types/luxon": "^3.3.7",
     "socket.io-client": "^4.7.2",
     "vue": "^3.3.11",
     "vue-router": "^4.2.5"

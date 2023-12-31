@@ -181,9 +181,6 @@ import {$percentage} from "../../helpers/numbers";
           <th scope="col" class="py-2 font-semibold">
             Diff.
           </th>
-<!--          <th scope="col" class="py-2 pl-0 pr-4 text-right font-semibold sm:pr-8 sm:text-left lg:pr-20">-->
-<!--            Class.-->
-<!--          </th>-->
           <th scope="col" class="hidden py-2 font-semibold md:table-cell">
             Tire Deg.
           </th>
@@ -260,9 +257,9 @@ import {$percentage} from "../../helpers/numbers";
 <script lang="ts">
 import {defineComponent} from 'vue';
 import {socket, state} from "../../socket";
-import tracks from '../../data/tracks.json';
-import cars from '../../data/cars.json';
 import type {Lap} from "../../types/Session";
+import type {Car, Track} from "../../types/Ordinals";
+import {getCarFromOrdinal, getTrackFromOrdinal} from "../../helpers/ordinals";
 
 export default defineComponent({
   name: 'Dashboard',
@@ -279,44 +276,11 @@ export default defineComponent({
 
   computed: {
     currentTrack(): Track {
-      if (!state.activeSession || state.activeSession.currentCarOrdinal === '') {
-        return {
-          Circuit: '',
-          IOCCode: '',
-          Length: '',
-          Location: '',
-          Track: '',
-          Ordinal: ''
-        };
-      }
-
-      return tracks.find((track) => track.Ordinal === state.activeSession?.currentTrackOrdinal.toString())
-          ?? {
-            Circuit: '',
-            IOCCode: '',
-            Length: '',
-            Location: '',
-            Track: '',
-            Ordinal: ''
-          };
+      return getTrackFromOrdinal(state.activeSession?.currentTrackOrdinal!);
     },
-    currentCar(): Car {
-      if (!state.activeSession || state.activeSession.currentCarOrdinal === '') {
-        return {
-          Ordinal: '',
-          Year: '',
-          Make: '',
-          Model: '',
-        };
-      }
 
-      return cars.find((track) => track.Ordinal === state.activeSession?.currentCarOrdinal.toString())
-          ?? {
-            Ordinal: '',
-            Year: '',
-            Make: '',
-            Model: '',
-          };
+    currentCar(): Car {
+      return getCarFromOrdinal(state.activeSession?.currentCarOrdinal!);
     },
 
     laps(): Lap[] {
@@ -331,20 +295,4 @@ export default defineComponent({
     }
   }
 });
-
-type Track = {
-  Ordinal: string,
-  Circuit: string,
-  Location: string,
-  IOCCode: string,
-  Track: string,
-  Length: string
-};
-
-type Car = {
-  Ordinal: string,
-  Year: string,
-  Make: string,
-  Model: string,
-};
 </script>

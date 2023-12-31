@@ -75,3 +75,23 @@ export type Lap = {
     // Position
     PositionChanges: number
 };
+
+export type PersistedSession = {
+    id: number,
+    trackOrdinal: string,
+    carOrdinal: string,
+    lightData: {
+        ID: number,
+        LapCount: number,
+        CarOrdinal: number,
+        TrackOrdinal: number,
+        AvgLapTime: number,
+        MedianLapTime: number,
+        BestLapTime: number,
+        FuelUsagePerLap: number,
+        TireWearPerLap: number,
+        Laps: Lap[],
+    },
+    createdAt: string,
+    updatedAt: string,
+};

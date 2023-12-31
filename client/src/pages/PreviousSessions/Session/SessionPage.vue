@@ -1,13 +1,12 @@
 <template>
-
+  <div class=""></div>
 </template>
 
 <script>
 export default {
-  name: "SessionPage"
+  name: 'SessionPage',
+  mounted() {
+    console.log('????');
+  }
 }
 </script>
-
-<style scoped>
-
-</style>

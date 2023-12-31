@@ -5,7 +5,7 @@ import type {ActiveSession, SessionState} from "./types/Session";
 
 export const state: SessionState = reactive({
     connected: false,
-    activeSession: reactive(null)
+    activeSession: null
 });
 
 // "undefined" means the URL will be computed from the `window.location` object
