@@ -18,6 +18,7 @@ export type Session = {
 };
 
 export type Lap = {
+  _id?: string,
   SessionId: number,
 
   Number: number,

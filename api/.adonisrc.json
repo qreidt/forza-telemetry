@@ -20,7 +20,8 @@
   "providers": [
     "./providers/AppProvider",
     "@adonisjs/core",
-    "@adonisjs/lucid"
+    "@adonisjs/lucid",
+    "@adonisjs/route-model-binding/build/providers/RmbProvider"
   ],
   "aceProviders": [
     "@adonisjs/repl"

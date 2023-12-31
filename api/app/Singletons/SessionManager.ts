@@ -307,7 +307,7 @@ class SessionManager {
   public export(): any|object {
     return {
 
-      sessionId: this.sessionId > 0 ? `S_${this.sessionId.toString().padStart(5, '0')}` : null,
+      sessionId: this.sessionId > 0 ? `S${this.sessionId.toString().padStart(5, '0')}` : null,
 
       currentLap: this.currentLap + 1,
       currentSessionTime: this.currentSessionTime,

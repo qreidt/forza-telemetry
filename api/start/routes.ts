@@ -20,22 +20,14 @@
 
 import Route from '@ioc:Adonis/Core/Route';
 import SessionManager from "App/Singletons/SessionManager";
-import Database from '@ioc:Adonis/Lucid/Database';
-import MongoDbService from "App/Services/MongoDbService";
 
 Route.get('/', async () => {
   return {'hello': 'world'};
 });
 
 Route.get('/active-session', () => {
-  //console.log(SessionManager);
   return SessionManager.export();
 });
 
-Route.get('/sessions', async () => {
-  return Database.from('sessions').select('*');
-});
-
-Route.get('/db', async () => {
-  return MongoDbService.getValues();
-});
+Route.resource('/sessions', 'SessionsController')
+  .only(['index', 'show']);

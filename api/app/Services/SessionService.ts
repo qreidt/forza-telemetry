@@ -7,7 +7,7 @@ class SessionService {
   public async persistLap(session: Session, lap: Lap): Promise<void> {
     const label = this.getIdLabel(session.ID);
     const session_model = (await SessionModel.find(session.ID))!;
-    await MongoDbService.insertIntoCollection(`SData:${label}`, lap);
+    lap._id = await MongoDbService.insertIntoCollection(`SData:${label}`, lap)
 
     const light_data = Object.assign({}, session);
     light_data.Laps = session.Laps.map(function (lap) {
