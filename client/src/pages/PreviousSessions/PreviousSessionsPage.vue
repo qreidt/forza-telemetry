@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 import {getFullCarNameFromOrdinal, getFullTrackNameFromOrdinal} from "../../helpers/ordinals";
 import {isoToFormattedTime} from "../../helpers/time";
 </script>
@@ -73,8 +72,8 @@ import {isoToFormattedTime} from "../../helpers/time";
 
 <script lang="ts">
 import {defineComponent} from "vue";
-import {PersistedSession} from "../../types/Session";
 import {getAllPreviousSessions} from "../../services/session";
+import type {PersistedSession} from "../../types/Session";
 
 export default defineComponent({
   name: "PreviousSessionPage",
@@ -90,8 +89,8 @@ export default defineComponent({
     },
 
     visitSession(session: PersistedSession): void {
-      this.$router.push(`/sessions/${session.id}`);
-    }
+      this.$router.push(`/sessions/${session.id}`, );
+    },
   },
 
   beforeMount() {

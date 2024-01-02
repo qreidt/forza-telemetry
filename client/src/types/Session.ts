@@ -51,6 +51,8 @@ export type Session = {
 };
 
 export type Lap = {
+    _id?: string,
+
     Number: number,
     Time: number,
     IsBestAtTime: boolean,
@@ -80,18 +82,20 @@ export type PersistedSession = {
     id: number,
     trackOrdinal: string,
     carOrdinal: string,
-    lightData: {
-        ID: number,
-        LapCount: number,
-        CarOrdinal: number,
-        TrackOrdinal: number,
-        AvgLapTime: number,
-        MedianLapTime: number,
-        BestLapTime: number,
-        FuelUsagePerLap: number,
-        TireWearPerLap: number,
-        Laps: Lap[],
-    },
+    lightData: PersistedSessionLightData,
     createdAt: string,
     updatedAt: string,
+};
+
+export type PersistedSessionLightData = {
+    ID: number,
+    LapCount: number,
+    CarOrdinal: number,
+    TrackOrdinal: number,
+    AvgLapTime: number,
+    MedianLapTime: number,
+    BestLapTime: number,
+    FuelUsagePerLap: number,
+    TireWearPerLap: number,
+    Laps: Lap[],
 };

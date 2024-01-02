@@ -31,3 +31,5 @@ Route.get('/active-session', () => {
 
 Route.resource('/sessions', 'SessionsController')
   .only(['index', 'show']);
+
+Route.get('/sessions/:session_id/telemetry', 'SessionsController.telemetry')
