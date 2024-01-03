@@ -1,6 +1,18 @@
 # Forza Telemetry
 ![](https://github.com/qreidt/forza-telemetry/blob/main/docs/live-dashboard.png?raw=true)
 
+
+## Images
+
+### Previous Sessions List
+![](https://github.com/qreidt/forza-telemetry/blob/main/docs/previous-sessions-list.png?raw=true)
+
+### Stored Session
+![](https://github.com/qreidt/forza-telemetry/blob/main/docs/session-01.png?raw=true)
+![](https://github.com/qreidt/forza-telemetry/blob/main/docs/session-02.png?raw=true)
+![](https://github.com/qreidt/forza-telemetry/blob/main/docs/session-03.png?raw=true)
+![](https://github.com/qreidt/forza-telemetry/blob/main/docs/session-04.png?raw=true)
+
 ## How it Works
 1. Enable UDP Telemetry option on Forza to your computer IP and port 12_000
 2. A new session is created each time you start racing from 0
@@ -34,16 +46,3 @@
 2. Fix Fuel and Wear Averages on Sessions with multiple stints
 3. Add button to remove a session
 4. Add storage size used for each session
-
-## Images
-### Live Dashboard
-![](https://github.com/qreidt/forza-telemetry/blob/main/docs/live-dashboard.png?raw=true)
-
-### Previous Sessions List
-![](https://github.com/qreidt/forza-telemetry/blob/main/docs/previous-sessions-list.png?raw=true)
-
-### Stored Session
-![](https://github.com/qreidt/forza-telemetry/blob/main/docs/session-01.png?raw=true)
-![](https://github.com/qreidt/forza-telemetry/blob/main/docs/session-02.png?raw=true)
-![](https://github.com/qreidt/forza-telemetry/blob/main/docs/session-03.png?raw=true)
-![](https://github.com/qreidt/forza-telemetry/blob/main/docs/session-04.png?raw=true)
