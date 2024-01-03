@@ -75,7 +75,15 @@ export type Lap = {
     AvgWear: number,
 
     // Position
-    PositionChanges: number
+    PositionChanges: number,
+
+    Data: {
+        Speed: number,
+        Accel: number,
+        Brake: number,
+        Steer: number,
+        CurrentLapDistance: number
+    }[],
 };
 
 export type PersistedSession = {
@@ -98,4 +106,9 @@ export type PersistedSessionLightData = {
     FuelUsagePerLap: number,
     TireWearPerLap: number,
     Laps: Lap[],
+};
+
+export type Dataset = {
+    label: string,
+    data: {x: number, y: number}[],
 };
