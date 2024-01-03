@@ -355,9 +355,9 @@ export default defineComponent({
 
       return {
         speed: { label, data: speed_data },
-        accel: { label, data: accel_data},
-        brake: { label, data: brake_data},
-        steer: { label, data: steer_data},
+        accel: { label, data: accel_data },
+        brake: { label, data: brake_data },
+        steer: { label, data: steer_data },
       }
     }
   },
