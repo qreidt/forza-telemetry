@@ -1,0 +1,45 @@
+version: '3'
+services:
+  vite:
+    image: frontend
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    ports:
+      - "8000:80"
+      - "12000:12000"
+    networks:
+      - telemetry
+    depends_on:
+      - api
+
+  api:
+    image: backend
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    environment:
+      MONGO_DB_URI: "mongodb://mongodb:27017"
+    ports:
+      - "3333:3333"
+    volumes:
+      - 'api-database:/app/temp/db.sqlite3'
+    networks:
+      - telemetry
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo:7.0
+    networks:
+      - telemetry
+
+networks:
+  telemetry:
+    driver: bridge
+
+volumes:
+  api-database:
+    driver: local
+
+
