@@ -24,6 +24,12 @@
 - AdonisJS 5 with SocketIO and Sqlite on the back-end
 - Vite with VueJS 3 and ChartJs on the front-end
 
+## How to use it with docker
+1. Make sure you have ports 3000 (API) and 80 (User interface; Can be edited in docker-compose.yml) open;
+2. Open the command line tool inside this directory and run docker-compose up -d;
+3. Docker will pull the necessary images to execute it once it's done.
+4. Note: If you're using windows, prefer to have all the source code executed directly in your WSL
+
 ## What it shows
 - Current Lap
 - Average Tire Degradation / lap
